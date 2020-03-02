@@ -1,8 +1,6 @@
 import {prompt} from "./prompt";
 
 
-
-
 export default class Game {
   constructor() {
     let player1;
@@ -12,85 +10,198 @@ export default class Game {
   }
 
   async start() {
-    const {size} = await prompt([{
-      name: "size",
-      description: "What size would you like the players grid to be?"
-    }]);
-
+    let size = await this.gridValidation();
     this.player1 = this.createGrid(size);
     this.player2 = this.createGrid(size);
     this.player1Ships = 3;
     this.player2Ships = 3;
 
-    await this.placeShips();
-    await this.gameplay();
+    await this.placeShips(size);
+    await this.gameplay(size);
   }
 
   end() {
     process.exit();
   }
 
-  async placeShips(){
-    try{
-    for (let i = 1; i < 4; i++){
+  async placeShips(size){
+    let ships = 0;
+    let iterations = 4;
+    let player2fail = false
+    for (let i = 1; i < iterations; i++){
+      ships++
+      if(!player2fail) {
+
+
+
       const player1Result = await prompt([{
         name: "playerOneX",
-        description: 'Player1 enter x coordinate for your ship number' + i
+        description: 'Player1 enter x coordinate for your ship number' + ships
       }, {
         name: "playerOneY",
-        description: 'Player1 enter y coordinate for your ship number' + i
+        description: 'Player1 enter y coordinate for your ship number' + ships
       }]);
-    }
-  } catch (error) {
-    console.log("Cant place ship outside of grid");
-  }
-    
+
+      const {playerOneX, playerOneY} = player1Result;
+      if (!this.characterCheck(playerOneX) || !this.characterCheck(playerOneY)) {
+        console.log("Invalid ship entry, try again");
+        iterations++;
+        ships--;
+        continue;
+      } else if (parseInt(playerOneX) > parseInt(size) || parseInt(playerOneY) > parseInt(size) || playerOneX < 0) {
+        console.log("Invalid ship entry, try again");
+        iterations++;
+        ships--;
+        continue;
+      } else {
+        this.shipPosition(playerOneX, playerOneY, 'S', this.player1);
+        this.printGrind(this.player1);
+      }
+
+
+
+      } else {
+
+
+
+
+        const player2Result = await prompt([{
+          name: "playerTwoX",
+          description: 'Player2 enter x coordinate for your ship number' + ships
+        }, {
+          name: "playerTwoY",
+          description: 'Player2 enter y coordinate for your ship number' + ships
+        }]);
+
+        const {playerTwoX, playerTwoY} = player2Result;
+        if (!this.characterCheck(playerTwoX) || !this.characterCheck(playerTwoY)){
+          console.log("Invalid ship entry, try again");
+          iterations++;
+          ships--
+          player2fail = true;
+        } else if (parseInt(playerTwoX) > parseInt(size)) {
+          console.log("Invalid ship entry, try again");
+          iterations++;
+          ships--
+          player2fail = true;
+          continue;
+        } else {
+          this.shipPosition(playerTwoX, playerTwoY, 'S', this.player2);
+          this.printGrind(this.player2);
+        }  
+      } 
+
+      player2fail = false;
 
       const player2Result = await prompt([{
         name: "playerTwoX",
-        description: 'Player2 enter x coordinate for your ship number' + i
+        description: 'Player2 enter x coordinate for your ship number' + ships
       }, {
         name: "playerTwoY",
-        description: 'Player2 enter y coordinate for your ship number' + i
+        description: 'Player2 enter y coordinate for your ship number' + ships
       }]);
 
       const {playerTwoX, playerTwoY} = player2Result;
-
-      this.shipPosition(playerTwoX, playerTwoY, 'S', this.player2);
-      this.printGrind(this.player2);
+      if (!this.characterCheck(playerTwoX) || !this.characterCheck(playerTwoY)){
+        console.log("Invalid ship entry, try again");
+        iterations++;
+        ships--
+        player2fail = true;
+      } else if (parseInt(playerTwoX) > parseInt(size)) {
+        console.log("Invalid ship entry, try again");
+        iterations++;
+        ships--
+        player2fail = true;
+        continue;
+      } else {
+        this.shipPosition(playerTwoX, playerTwoY, 'S', this.player2);
+        this.printGrind(this.player2);
+      }  
     }
+  }
   
 
-  async gameplay(){
+  async gameplay(size){
+    let player2Fail = false;
     while (this.player2Ships > 0 && this.player1Ships > 0) {
+
+      if (!player2Fail){
       const playerOneAttack = await prompt([{
-        name: "x",
+        name: "playerOneX",
         description: "Player 1 enter the x coordinates for your attack"
       }, {
-        name: "y",
+        name: "playerOneY",
         description: "Player 1 enter the y coordinates for your attack"
       }]);
 
+      const {playerOneX, playerOneY} = playerOneAttack;
+      if (!this.characterCheck(playerOneX) || !this.characterCheck(playerOneY)) {
+        console.log("Enter valid coordinate");
+        continue;
+      } else if (parseInt(playerOneX) > parseInt(size) || parseInt(playerOneY) > parseInt(size)) {
+        console.log("Enter valid coordinate");
+        continue;
+      } else {
+        if (this.attackShip2(playerOneAttack.playerOneX, playerOneAttack.playerOneY, this.player2)){
+          this.player2Ships--;
+        }
+        console.log('Player1');
+        this.printGrind(this.player1);
+      }
+      } else {
+        const playerTwoAttack = await prompt([{
+          name: "playerTwoX",
+          description: "Player 2 enter the x coordinates for your attack"
+        }, {
+          name: "playerTwoY",
+          description: "Player 2 enter the y coordinates for your attack"
+        }]);
+  
+        const {playerTwoX, playerTwoY} = playerTwoAttack;
+        if (!this.characterCheck(playerTwoX) || !this.characterCheck(playerTwoY)) {
+          player2Fail = true;
+          console.log("Enter valid coordinate")
+          continue;
+        } else if (parseInt(playerTwoX) > parseInt(size) || parseInt(playerTwoY) > parseInt(size)){
+          player2Fail = true;
+          console.log("Enter valid coordinate")
+          continue;
+        } else {
+          if (this.attackShip1(playerTwoAttack.playerTwoX, playerTwoAttack.playerTwoY, this.player1)){
+            this.player1Ships--;
+          }
+          console.log("Player2")
+          this.printGrind(this.player2);
+        }
+      }
+
+
+  
       const playerTwoAttack = await prompt([{
-        name: "x",
+        name: "playerTwoX",
         description: "Player 2 enter the x coordinates for your attack"
       }, {
-        name: "y",
+        name: "playerTwoY",
         description: "Player 2 enter the y coordinates for your attack"
       }]);
 
-      if (this.attackShip1(playerTwoAttack.x, playerTwoAttack.y, this.player1)){
-        this.player1Ships--;
+      const {playerTwoX, playerTwoY} = playerTwoAttack;
+      if (!this.characterCheck(playerTwoX) && !this.characterCheck(playerTwoY)) {
+        console.log("Enter valid coordinate")
+        continue;
+      } else if (parseInt(playerTwoX) > parseInt(size) || parseInt(playerTwoY) > parseInt(size)) {
+        console.log("Enter valid coordinate")
+        continue;
+      } else {
+        if (this.attackShip1(playerTwoAttack.playerTwoX, playerTwoAttack.playerTwoY, this.player1)){
+          this.player1Ships--;
+        }
+        console.log("Player2")
+        this.printGrind(this.player2);
       }
-      if (this.attackShip2(playerOneAttack.x, playerOneAttack.y, this.player2)){
-        this.player2Ships--;
-      }
-
-      console.log('Player1');
-      this.printGrind(this.player1);
-      console.log('Player2');
-      this.printGrind(this.player2);
     }
+    player2Fail = false;
+
     if (this.player2Ships == 0 && this.player1Ships > 0) {
       console.log('Congratulations Player1 has won!');
     } else {
@@ -157,6 +268,35 @@ export default class Game {
       return false;
     } else {
       return false;
+    }
+  }
+
+  characterCheck(x) {
+    let charArray = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    if (x === ''){
+      return false;
+    }
+    for(let i = 0; i < x.length; x++) {
+      if(!charArray.includes(x[i])) {
+        return false;
+      }
+    }
+    return true
+  }
+
+  async gridValidation() {
+    for (let i = 0; i < 1; i++) {
+      const {size} = await prompt([{
+        name: "size",
+        description: "What size would you like the players grid to be?"
+      }]);
+      if (!this.characterCheck(size)) {
+        i--
+        console.log('Enter a valid number');
+        continue;
+      } else {
+        return size;
+      }
     }
   }
 }
