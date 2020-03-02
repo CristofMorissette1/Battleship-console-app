@@ -55,40 +55,12 @@ export default class Game {
         continue;
       } else {
         this.shipPosition(playerOneX, playerOneY, 'S', this.player1);
+        console.log("Player1")
         this.printGrind(this.player1);
       }
 
 
 
-      } else {
-
-
-
-
-        const player2Result = await prompt([{
-          name: "playerTwoX",
-          description: 'Player2 enter x coordinate for your ship number' + ships
-        }, {
-          name: "playerTwoY",
-          description: 'Player2 enter y coordinate for your ship number' + ships
-        }]);
-
-        const {playerTwoX, playerTwoY} = player2Result;
-        if (!this.characterCheck(playerTwoX) || !this.characterCheck(playerTwoY)){
-          console.log("Invalid ship entry, try again");
-          iterations++;
-          ships--
-          player2fail = true;
-        } else if (parseInt(playerTwoX) > parseInt(size)) {
-          console.log("Invalid ship entry, try again");
-          iterations++;
-          ships--
-          player2fail = true;
-          continue;
-        } else {
-          this.shipPosition(playerTwoX, playerTwoY, 'S', this.player2);
-          this.printGrind(this.player2);
-        }  
       } 
 
       player2fail = false;
@@ -107,6 +79,7 @@ export default class Game {
         iterations++;
         ships--
         player2fail = true;
+        continue;
       } else if (parseInt(playerTwoX) > parseInt(size)) {
         console.log("Invalid ship entry, try again");
         iterations++;
@@ -115,6 +88,7 @@ export default class Game {
         continue;
       } else {
         this.shipPosition(playerTwoX, playerTwoY, 'S', this.player2);
+        console.log("Player2")
         this.printGrind(this.player2);
       }  
     }
@@ -145,38 +119,13 @@ export default class Game {
         if (this.attackShip2(playerOneAttack.playerOneX, playerOneAttack.playerOneY, this.player2)){
           this.player2Ships--;
         }
-        console.log('Player1');
-        this.printGrind(this.player1);
+        console.log('Player2');
+        this.printGrind(this.player2);
       }
-      } else {
-        const playerTwoAttack = await prompt([{
-          name: "playerTwoX",
-          description: "Player 2 enter the x coordinates for your attack"
-        }, {
-          name: "playerTwoY",
-          description: "Player 2 enter the y coordinates for your attack"
-        }]);
-  
-        const {playerTwoX, playerTwoY} = playerTwoAttack;
-        if (!this.characterCheck(playerTwoX) || !this.characterCheck(playerTwoY)) {
-          player2Fail = true;
-          console.log("Enter valid coordinate")
-          continue;
-        } else if (parseInt(playerTwoX) > parseInt(size) || parseInt(playerTwoY) > parseInt(size)){
-          player2Fail = true;
-          console.log("Enter valid coordinate")
-          continue;
-        } else {
-          if (this.attackShip1(playerTwoAttack.playerTwoX, playerTwoAttack.playerTwoY, this.player1)){
-            this.player1Ships--;
-          }
-          console.log("Player2")
-          this.printGrind(this.player2);
-        }
-      }
+    }
+    
+      player2Fail = false;
 
-
-  
       const playerTwoAttack = await prompt([{
         name: "playerTwoX",
         description: "Player 2 enter the x coordinates for your attack"
@@ -188,20 +137,21 @@ export default class Game {
       const {playerTwoX, playerTwoY} = playerTwoAttack;
       if (!this.characterCheck(playerTwoX) && !this.characterCheck(playerTwoY)) {
         console.log("Enter valid coordinate")
+        player2Fail = true;
         continue;
       } else if (parseInt(playerTwoX) > parseInt(size) || parseInt(playerTwoY) > parseInt(size)) {
         console.log("Enter valid coordinate")
+        player2Fail = true;
         continue;
       } else {
         if (this.attackShip1(playerTwoAttack.playerTwoX, playerTwoAttack.playerTwoY, this.player1)){
           this.player1Ships--;
         }
-        console.log("Player2")
-        this.printGrind(this.player2);
+        console.log("Player1")
+        this.printGrind(this.player1);
       }
     }
-    player2Fail = false;
-
+    
     if (this.player2Ships == 0 && this.player1Ships > 0) {
       console.log('Congratulations Player1 has won!');
     } else {
@@ -290,7 +240,7 @@ export default class Game {
         name: "size",
         description: "What size would you like the players grid to be?"
       }]);
-      if (!this.characterCheck(size)) {
+      if ((!this.characterCheck(size)) || parseInt(size) > 20) {
         i--
         console.log('Enter a valid number');
         continue;
